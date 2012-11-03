@@ -1,0 +1,5 @@
+gcc -g -c  myblas.c
+ar rcs libmyblas.a myblas.o 
+gcc myblas-test.c -I . -L . -lmyblas
+./a.out
+

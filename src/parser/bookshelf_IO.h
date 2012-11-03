@@ -76,7 +76,7 @@ Iowa State University Research Foundation, Inc.
     /*--------------  Extern Variables  ------------------*/
 
     extern char **cellName;
-    
+
     extern char nodesFile[BUFFERSIZE], netsFile[BUFFERSIZE], wtsFile[BUFFERSIZE];
     extern char sclFile[BUFFERSIZE], plFile[BUFFERSIZE], benchmarkName[BUFFERSIZE];
 
@@ -104,7 +104,6 @@ Iowa State University Research Foundation, Inc.
 
     cellName[i]         =   cell name corresponding to cell index "i" 
                             (i = 1..movableNodes+numTerminals)
-
     movableNodes        =   number of movable nodes,
     numTerminals        =   number of fixed nodes (I/O Pads + Fixed Macros)
     averageCellWidth    =   avg width of movable nodes,

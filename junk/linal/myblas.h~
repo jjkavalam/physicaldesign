@@ -1,0 +1,22 @@
+#ifndef MY_BLAS_H
+#define MY_BLAS_H
+
+    typedef struct {
+        int rows, cols;
+        double **CRSa;
+        int **CRSj;        
+        int *CRSnz;
+    } BLAS_matrix;
+
+    enum blas_trans_type {
+                blas_no_trans   = 111,
+                blas_trans      = 112};        
+                
+	BLAS_matrix BLAS_duscr_begin(int rows, int cols);
+    void BLAS_duscr_insert_row( BLAS_matrix A, int row, int nz, double* vals, int* cols );
+    void BLAS_duscr_end(BLAS_matrix A);
+	void BLAS_dusmv(int trans_type, double alpha, BLAS_matrix A, double *x, int inc1, double* y, int inc2 );
+	void BLAS_usds(BLAS_matrix A);
+
+#endif
+

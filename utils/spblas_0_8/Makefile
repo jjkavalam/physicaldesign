@@ -6,7 +6,7 @@
 
 
 #CFLAGS = -g -ansi -Wall  -pedantic -DBLAS_ERRORS_ARE_FATAL
-CFLAGS = -O3 -DBLAS_ERRORS_ARE_FATAL
+CFLAGS = -g -O3 -DBLAS_ERRORS_ARE_FATAL
 
 
 SPARSE_BLAS_A = libsparseblas.a

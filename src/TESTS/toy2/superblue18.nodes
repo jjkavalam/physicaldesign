@@ -1,0 +1,10 @@
+UCLA nodes 1.0
+# Created  :  Mar 15 2011
+# User     :  Gi-Joon Nam & Natarajan Viswanathan at IBM Research, Austin ({gnam, nviswan}@us.ibm.com)
+
+NumNodes      :  3
+NumTerminals  :  2
+
+             o1             10             10
+             p1             10             10    terminal_NI
+             p2             10             10    terminal_NI         

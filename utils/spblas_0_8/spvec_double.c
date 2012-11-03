@@ -104,7 +104,7 @@ int SPVEC_double_resize(SPVEC_double *A, int newN, int newsize)
 	BLAS_ASSERT_RETURN (A != NULL, -1);
 	BLAS_ASSERT_RETURN (newN >= 0, -1);
 	BLAS_ASSERT_RETURN (newsize >= 0, -1);
-	BLAS_ASSERT_RETURN (newsize <= newN, -1);
+//	BLAS_ASSERT_RETURN (newsize <= newN, -1);
 
 	if (A->allocated_nz_ == newsize) 
 		return 0;

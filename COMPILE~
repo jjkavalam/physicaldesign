@@ -1,0 +1,5 @@
+g++ -c -g placer.cpp -I ../utils/spblas_0_8/ -L ../utils/spblas_0_8 -L ./parser/ -lparser -lgsl -lgslcblas -lm -lsparseblas
+ar rcs libplacer.a placer.o
+g++ -g test-main.cpp -I ../utils/spblas_0_8/ -I parser/ -L ../utils/spblas_0_8 -L ./parser/ -L . -lparser -lgsl -lgslcblas -lm -lplacer -lsparseblas
+
+

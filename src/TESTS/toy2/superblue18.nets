@@ -1,0 +1,13 @@
+Toy nets 1.0
+# Created  :  Nov 03 2012
+# Author   : Jobin
+
+NumNets  :  5
+NumPins  :  15
+
+NetDegree  :  2    n1
+        o1   O  :     0.0000     0.0000
+        p1   O  :     0.0000     0.0000
+NetDegree  :  2    n2
+        o1   O  :     0.0000     0.0000
+        p2   O  :     0.0000     0.0000

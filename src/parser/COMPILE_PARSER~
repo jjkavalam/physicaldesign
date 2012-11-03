@@ -1,0 +1,2 @@
+gcc -c bookshelf_IO.cxx memAlloc.cxx
+ar rcs libparser.a memAlloc.o bookshelf_IO.o

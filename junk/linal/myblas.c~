@@ -1,0 +1,39 @@
+#include <stdlib.h>
+#include "myblas.h"
+
+/*    typedef struct {
+        int rows, cols;
+        double **CRSa;
+        int **CRSj;
+        int *nz;
+    } BLAS_matrix;
+*/
+    
+BLAS_matrix BLAS_duscr_begin(int rows, int cols){
+
+    int i;
+
+    // Create a new structure and return
+    BLAS_matrix A;
+    A.rows = rows;
+    A.cols = cols;
+    A.CRSa = (double**)malloc(sizeof(double*)*rows);   
+    A.CRSj = (int**)malloc(sizeof(int*)*rows);
+    A.CRSnz = (int*)malloc(sizeof(int)*rows);    
+    for (i=0;i<rows+1;i++) A.CRSnz[i] = 0;    
+    return A;
+}
+void BLAS_usds(BLAS_matrix A){
+    int i;
+    for (i=0;i<A.rows;i++){
+        if (A.CRSa[i] != NULL) free(A.CRSa[i]);
+        if (A.CRSj[i] != NULL) free(A.CRSj[i]);                
+    }
+    free(A.CRSnz);
+    free(A.CRSa);
+    free(A.CRSj);
+}
+void BLAS_duscr_insert_row( BLAS_matrix A, int row, int nz, double* vals, int* cols ){
+    // No row exists
+    // Setup 
+}

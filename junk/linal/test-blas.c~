@@ -1,0 +1,70 @@
+/*
+    Compile instructions:
+        gcc test-blas.c -I ../utils/spblas_0_8/ -L ../utils/spblas_0_8/ -lsparseblas
+        
+    This test checks the implementation
+        of insert compressed row method 
+        BLAS_duscr_insert_row(blas_sparse_matrix A, int i, int nz, const ARRAY val, const int* indx);
+
+*/
+
+
+#include <stdio.h>
+#include "blas_sparse.h"
+#include "spblasi_table.h"
+
+
+blas_sparse_matrix A;
+
+void printA(){
+    printf("\n === Printing A ===\n");
+    //SPBLASI_Matrix_double_print(SPBLASI_table_get(A), "%lf");
+}
+
+main() {
+	int N = 4;
+	int nz = 5;
+	double val[] = {1.0, 1.0, 1.0, 1.0, 1.0, 1.0};
+	int indx[] = {0, 1, 2, 3, 0, 2};
+	int jndx[] = {0, 1, 2, 3, 0, 2};
+	double x[] = {1.0, 1.0, 1.0, 1.0};
+	double y[] = {0.0, 0.0, 0.0, 0.0};
+
+    int cols[] = {0}; 
+    double vals[] = {0.0};
+    
+	int i;
+	double alpha = 1.0;
+
+	A = BLAS_duscr_begin(N, N);
+	
+
+	//printf("\n Inserting entries one by one ... ");
+	//for (i = 0; i < nz; i++)
+	//	BLAS_duscr_insert_entry(A, val[i], indx[i], jndx[i]);
+	
+	printf("\n Inserting entries one row at a time ... ");
+	// Creating a diagonal matrix
+	for (i=0; i < N; i++){
+	    cols[0] = i;
+	    vals[0] = 1.0;
+    	//BLAS_duscr_insert_row(A, i, 1, vals, cols);
+        BLAS_duscr_insert_row( A, i, 1, (const double *) vals, (const int *) cols );	
+    	//SPBLASI_Matrix_double_insert_row(SPBLASI_table_get(A),i, 1, vals, cols);
+	}
+	
+	BLAS_duscr_end(A);
+	
+    
+	
+	printA();
+    printf("\n Compute y <- A * x ");
+	BLAS_dusmv(blas_trans, alpha, A, x, 1, y, 1);
+
+    printf("\n Printing y ...");
+	for (i = 0; i < N; i++)
+		printf("%lf ", y[i]);
+		
+    printf("\n Release blas resources of A");
+	BLAS_usds(A);
+}

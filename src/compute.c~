@@ -1,0 +1,191 @@
+// compute.c
+// This file contains the routines that perform the 
+// computational intensive parts, especially those involving
+// matrices and vectors
+// This file contains all the various uses of BLAS 
+// * Interfaces directly with the parser as well
+
+
+#define ADD_TO_C(val,i,j) printf("\nC[%d][%d] += %lf",i,j,val); BLAS_duscr_insert_entry(C, val, i, j);
+#define ADD_TO_d_x(val,i) printf("\nd_x[%d]   += %lf",i,val); d_x[i] += val;
+#define ADD_TO_d_y(val,i) printf("\nd_y[%d]   += %lf",i,val); d_y[i] += val;
+#define ISFIXED(i) ((i >= movableNodes+1) ? 1:0)
+
+  // Setup new matrices D, B based on the above information
+  //   
+  
+  void setupDBxi(Partition,depBlocks);  
+  VECT computeZv(v);
+  VECT computeCv(v);
+  VECT computeZTv(v);
+  VECT vectsum(v1,v2);
+  double dotxi(v);
+  
+  VECT updatecT(){
+      VECT xi0 = computeinvDv(u);
+      VECT v1 = computeCv(xi0);
+      VECT v2 = vectsum(v1,d_x);
+      VECT cT = computeZTv(v2);
+      return cT;
+    }
+    
+    VECT computeZTCZx(VECT v){
+        VECT v4 = computeZv(v);
+        VECT v5 = computeCv(v4);
+        VECT v6 = computeZTv(v5);
+        return v6;
+    }
+
+double WireLength(){
+    // Computes the wirelength using the given x,y positions
+    // WL = 1/2 xT . C . x + dT . x
+    int i;
+    double sum1, sum2, WLx, WLy, WL;
+    
+    printf("\n Computing wirelength ... ");
+    
+    /// X
+    double* x1 = (double*)malloc(sizeof(double)*movableNodes);
+    memset((void*)x1,0,sizeof(double)*movableNodes);
+        
+    printf("\n x1 <- C * x,  ");
+	BLAS_dusmv(blas_no_trans, 1.0, C, x, 1, x1, 1);
+
+    printf(" sum1  <- xT . x1 = ");
+    sum1 = 0; 
+    for(i=0;i<movableNodes;i++){
+        sum1 += x[i]*x1[i];
+    }
+    printf("%lf, ",sum1);
+    
+    printf(" sum2 <- d_xT . x = ");
+    sum2 = 0;
+    for(i=0;i<movableNodes;i++){
+        sum2 += d_x[i]*x[i];
+    }
+    printf("%lf, ",sum2);
+
+    printf(" WLx <- sum1 + sum2 = ");    
+    WLx = 0.5 * sum1 + sum2;
+    printf("%lf, ",WLx);
+    
+    /// Y
+    double* y1 = (double*)malloc(sizeof(double)*movableNodes);
+    memset((void*)y1,0,sizeof(double)*movableNodes);
+        
+    printf("\n y1 <- C * y,  ");
+	BLAS_dusmv(blas_no_trans, 1.0, C, y, 1, y1, 1);
+
+    printf(" sum1  <- yT . y1 = ");
+    sum1 = 0; 
+    for(i=0;i<movableNodes;i++){
+        sum1 += y[i]*y1[i];
+    }
+    printf("%lf, ",sum1);
+    
+    printf(" sum2 <- d_yT . y = ");
+    sum2 = 0;
+    for(i=0;i<movableNodes;i++){
+        sum2 += d_y[i]*y[i];
+    }
+    printf("%lf, ",sum2);
+
+    printf(" WLy <- sum1 + sum2 = ");    
+    WLy = 0.5 * sum1 + sum2;
+    printf("%lf, ",WLy);
+    
+
+    WL = WLx + WLy;    
+    printf("\n WL = WLx + WLy = %lf",WL);
+    
+    return WL;
+  
+} 
+
+void debug_setupCdxdy(){
+    printf("\n Printing out the netlist\n");
+
+    int n, nPerNode, t, mu;
+    
+    for(n=1;n<=numNets;n++){
+        printf("\n Net %d ==> ", n);        
+        nPerNode = netlistIndex[n+1] - netlistIndex[n];
+        for (t = 0; t < nPerNode; t++) {
+			        mu = netlist[netlistIndex[n] + t];     
+			        printf("%d, ",mu);
+        }
+    }
+    
+    printf("\n Printing out the cell coordinates obtained from the .pl file \n");
+    printf("\n Movable nodes = %d",movableNodes);
+    for(mu = 1;mu<=movableNodes;mu++){
+        printf("\n%d => %lf , %lf",mu,x[mu],y[mu]);
+    }
+    printf("\n Fixed nodes = %d",numTerminals);
+    for(t = 1;t <= numTerminals;t++){
+        printf("\n%d => %lf , %lf",movableNodes+t,xCellCoord[movableNodes+t],yCellCoord[movableNodes+t]);
+    }
+    
+}
+
+
+void setupCdxdy() {
+    debug_setupCdxdy();
+
+    // Setup matrix C, vector dx
+
+    int mu, lda, n, nPerNode, t, t2;
+    
+	blas_sparse_matrix C;
+	C = BLAS_duscr_begin(movableNodes, movableNodes);
+    
+    d_x = (double*)malloc(sizeof(double)*movableNodes);
+    memset((void*)d_x,0,sizeof(double)*movableNodes);
+
+    d_y = (double*)malloc(sizeof(double)*movableNodes);
+    memset((void*)d_y,0,sizeof(double)*movableNodes);
+
+    // for net n in set of Nets
+	for (n = 1; n <= numNets; n++) {
+	    // e = 2.0 / (Number of objects in the net)
+		nPerNode = netlistIndex[n+1] - netlistIndex[n];
+		double e = 2.0/nPerNode;
+		
+		// for each movable block, mu, in the net
+		for (t = 0; t < nPerNode; t++) {
+			mu = netlist[netlistIndex[n] + t];
+		    if (ISFIXED(mu)) 
+                continue;
+
+			ADD_TO_C(e*(nPerNode-1),mu-1,mu-1)
+			ADD_TO_d_x(xPinOffset[netlistIndex[n] + t] * e * (nPerNode - 1), mu-1)
+	        ADD_TO_d_y(yPinOffset[netlistIndex[n] + t] * e * (nPerNode - 1), mu-1)
+	        
+	        // for each object, lda, in the net other than mu
+			for (t2 = 0; t2 < nPerNode; t2++) {
+			    if (t2 == t) 
+			        continue;
+			        
+			    lda = netlist[netlistIndex[n] + t2];
+			    // if lda is movable
+			    if (!ISFIXED(lda)){
+			        ADD_TO_C(-e, mu-1, lda-1)
+    		        ADD_TO_d_x(-e * xPinOffset[netlistIndex[n] + t2], mu-1)
+    		        ADD_TO_d_y(-e * yPinOffset[netlistIndex[n] + t2], mu-1)
+			    }
+			    // if lda is not movable
+			    else{
+			        ADD_TO_d_x(-e * (x[lda-1] + xPinOffset[netlistIndex[n] + t2]), mu-1)
+			        ADD_TO_d_y(-e * (y[lda-1] + yPinOffset[netlistIndex[n] + t2]), mu-1)
+			    }
+
+			}
+			
+		}
+				
+	}
+	
+	BLAS_duscr_end(C);
+	return;
+
+}   
